@@ -74,6 +74,29 @@ export default function Sudoku() {
         }
     }, [volumenSonido])
 
+    const esMovimientoValido = (tablero: TableroSudoku, fila: number, columna: number, num: number): boolean => {
+        // Verificar fila
+        for (let i = 0; i < 9; i++) {
+            if (tablero[fila][i] === num) return false
+        }
+
+        // Verificar columna
+        for (let i = 0; i < 9; i++) {
+            if (tablero[i][columna] === num) return false
+        }
+
+        // Verificar bloque 3x3
+        const filaInicio = Math.floor(fila / 3) * 3
+        const columnaInicio = Math.floor(columna / 3) * 3
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                if (tablero[filaInicio + i][columnaInicio + j] === num) return false
+            }
+        }
+
+        return true
+    }
+
     const generarSudoku = useCallback(() => {
         const nuevoTablero: TableroSudoku = Array(9).fill(null).map(() => Array(9).fill(null))
         const numParaLlenar = NIVELES_DIFICULTAD[dificultad].celdas
@@ -84,7 +107,7 @@ export default function Sudoku() {
                 fila = Math.floor(Math.random() * 9)
                 columna = Math.floor(Math.random() * 9)
                 num = Math.floor(Math.random() * 9) + 1
-            } while (!esMovimientoValido(nuevoTablero, fila, columna, num))
+            } while (nuevoTablero[fila][columna] !== null || !esMovimientoValido(nuevoTablero, fila, columna, num))
             nuevoTablero[fila][columna] = num
         }
 
@@ -100,22 +123,6 @@ export default function Sudoku() {
     useEffect(() => {
         generarSudoku()
     }, [generarSudoku])
-
-    const esMovimientoValido = (tablero: TableroSudoku, fila: number, columna: number, num: number): boolean => {
-        for (let i = 0; i < 9; i++) {
-            if (tablero[fila][i] === num || tablero[i][columna] === num) return false
-        }
-
-        const filaInicio = Math.floor(fila / 3) * 3
-        const columnaInicio = Math.floor(columna / 3) * 3
-        for (let i = 0; i < 3; i++) {
-            for (let j = 0; j < 3; j++) {
-                if (tablero[filaInicio + i][columnaInicio + j] === num) return false
-            }
-        }
-
-        return true
-    }
 
     const manejarClicCelda = (fila: number, columna: number) => {
         setCeldaSeleccionada([fila, columna])
@@ -148,9 +155,6 @@ export default function Sudoku() {
         const nuevoTablero = tablero.map(fila => [...fila])
         nuevoTablero[fila][columna] = num
 
-        setTablero(nuevoTablero)
-        setHistorial([...historial, nuevoTablero])
-
         const nuevosErrores = new Set(errores)
         if (!esMovimientoValido(nuevoTablero, fila, columna, num)) {
             nuevosErrores.add(`${fila},${columna}`)
@@ -163,6 +167,9 @@ export default function Sudoku() {
                 audioClick.current.play()
             }
         }
+
+        setTablero(nuevoTablero)
+        setHistorial([...historial, nuevoTablero])
         setErrores(nuevosErrores)
 
         if (esTableroCompleto(nuevoTablero) && nuevosErrores.size === 0) {
