@@ -40,9 +40,9 @@ export default function Sudoku() {
     const tableroRef = useRef<HTMLDivElement>(null)
     const { toast } = useToast()
 
-    const audioClick = useRef(new Audio('/click.mp3'))
-    const audioError = useRef(new Audio('/error.mp3'))
-    const audioComplete = useRef(new Audio('/complete.mp3'))
+    const audioClick = useRef(typeof window !== 'undefined' ? new Audio('/click.mp3') : null)
+    const audioError = useRef(typeof window !== 'undefined' ? new Audio('/error.mp3') : null)
+    const audioComplete = useRef(typeof window !== 'undefined' ? new Audio('/complete.mp3') : null)
 
     useEffect(() => {
         document.body.classList.toggle('dark', modoOscuro)
@@ -67,9 +67,11 @@ export default function Sudoku() {
     }, [tablero, tableroInicial])
 
     useEffect(() => {
-        audioClick.current.volume = volumenSonido / 100
-        audioError.current.volume = volumenSonido / 100
-        audioComplete.current.volume = volumenSonido / 100
+        if (typeof window !== 'undefined' && audioClick.current && audioError.current && audioComplete.current) {
+            audioClick.current.volume = volumenSonido / 100
+            audioError.current.volume = volumenSonido / 100
+            audioComplete.current.volume = volumenSonido / 100
+        }
     }, [volumenSonido])
 
     const generarSudoku = useCallback(() => {
@@ -117,7 +119,9 @@ export default function Sudoku() {
 
     const manejarClicCelda = (fila: number, columna: number) => {
         setCeldaSeleccionada([fila, columna])
-        audioClick.current.play()
+        if (audioClick.current) {
+            audioClick.current.play()
+        }
     }
 
     const manejarTeclaPresionada = (e: React.KeyboardEvent) => {
@@ -150,16 +154,22 @@ export default function Sudoku() {
         const nuevosErrores = new Set(errores)
         if (!esMovimientoValido(nuevoTablero, fila, columna, num)) {
             nuevosErrores.add(`${fila},${columna}`)
-            audioError.current.play()
+            if (audioError.current) {
+                audioError.current.play()
+            }
         } else {
             nuevosErrores.delete(`${fila},${columna}`)
-            audioClick.current.play()
+            if (audioClick.current) {
+                audioClick.current.play()
+            }
         }
         setErrores(nuevosErrores)
 
         if (esTableroCompleto(nuevoTablero) && nuevosErrores.size === 0) {
             setEnEjecucion(false)
-            audioComplete.current.play()
+            if (audioComplete.current) {
+                audioComplete.current.play()
+            }
             confetti()
             toast({
                 title: "¡Felicidades!",
@@ -177,7 +187,9 @@ export default function Sudoku() {
             const nuevoHistorial = historial.slice(0, -1)
             setTablero(nuevoHistorial[nuevoHistorial.length - 1])
             setHistorial(nuevoHistorial)
-            audioClick.current.play()
+            if (audioClick.current) {
+                audioClick.current.play()
+            }
         }
     }
 
@@ -188,7 +200,9 @@ export default function Sudoku() {
         setTemporizador(0)
         setEnEjecucion(true)
         setProgreso(0)
-        audioClick.current.play()
+        if (audioClick.current) {
+            audioClick.current.play()
+        }
     }
 
     const manejarGuardar = () => {
@@ -197,7 +211,9 @@ export default function Sudoku() {
             title: "Juego guardado",
             description: "Tu progreso ha sido guardado correctamente.",
         })
-        audioClick.current.play()
+        if (audioClick.current) {
+            audioClick.current.play()
+        }
     }
 
     const manejarCargar = () => {
@@ -213,14 +229,18 @@ export default function Sudoku() {
                 title: "Juego cargado",
                 description: "Tu juego guardado ha sido cargado correctamente.",
             })
-            audioClick.current.play()
+            if (audioClick.current) {
+                audioClick.current.play()
+            }
         } else {
             toast({
                 title: "Error",
                 description: "No se encontró ningún juego guardado.",
                 variant: "destructive",
             })
-            audioError.current.play()
+            if (audioError.current) {
+                audioError.current.play()
+            }
         }
     }
 
