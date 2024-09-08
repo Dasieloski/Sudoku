@@ -9,7 +9,7 @@ import { Slider } from "@/components/ui/slider"
 import { Progress } from "@/components/ui/progress"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useToast } from "@/hooks/use-toast" // Cambiado el import para que coincida con la ruta correcta
+import { useToast } from "@/hooks/use-toast"
 import { Undo, RotateCcw, HelpCircle, Sun, Moon, Save, Download, Pause, Play } from 'lucide-react'
 import confetti from 'canvas-confetti'
 
@@ -40,10 +40,6 @@ export default function Sudoku() {
     const tableroRef = useRef<HTMLDivElement>(null)
     const { toast } = useToast()
 
-    const audioClick = useRef(typeof window !== 'undefined' ? new Audio('/click.mp3') : null)
-    const audioError = useRef(typeof window !== 'undefined' ? new Audio('/error.mp3') : null)
-    const audioComplete = useRef(typeof window !== 'undefined' ? new Audio('/complete.mp3') : null)
-
     useEffect(() => {
         document.body.classList.toggle('dark', modoOscuro)
     }, [modoOscuro])
@@ -65,14 +61,6 @@ export default function Sudoku() {
         const progresoActual = Math.round(((celdasLlenas - celdasIniciales) / (celdasTotales - celdasIniciales)) * 100)
         setProgreso(progresoActual)
     }, [tablero, tableroInicial])
-
-    useEffect(() => {
-        if (typeof window !== 'undefined' && audioClick.current && audioError.current && audioComplete.current) {
-            audioClick.current.volume = volumenSonido / 100
-            audioError.current.volume = volumenSonido / 100
-            audioComplete.current.volume = volumenSonido / 100
-        }
-    }, [volumenSonido])
 
     const esMovimientoValido = (tablero: TableroSudoku, fila: number, columna: number, num: number): boolean => {
         // Verificar fila
@@ -126,9 +114,6 @@ export default function Sudoku() {
 
     const manejarClicCelda = (fila: number, columna: number) => {
         setCeldaSeleccionada([fila, columna])
-        if (audioClick.current) {
-            audioClick.current.play()
-        }
     }
 
     const manejarTeclaPresionada = (e: React.KeyboardEvent) => {
@@ -158,14 +143,8 @@ export default function Sudoku() {
         const nuevosErrores = new Set(errores)
         if (!esMovimientoValido(nuevoTablero, fila, columna, num)) {
             nuevosErrores.add(`${fila},${columna}`)
-            if (audioError.current) {
-                audioError.current.play()
-            }
         } else {
             nuevosErrores.delete(`${fila},${columna}`)
-            if (audioClick.current) {
-                audioClick.current.play()
-            }
         }
 
         setTablero(nuevoTablero)
@@ -174,9 +153,6 @@ export default function Sudoku() {
 
         if (esTableroCompleto(nuevoTablero) && nuevosErrores.size === 0) {
             setEnEjecucion(false)
-            if (audioComplete.current) {
-                audioComplete.current.play()
-            }
             confetti()
             toast({
                 title: "¡Felicidades!",
@@ -194,9 +170,6 @@ export default function Sudoku() {
             const nuevoHistorial = historial.slice(0, -1)
             setTablero(nuevoHistorial[nuevoHistorial.length - 1])
             setHistorial(nuevoHistorial)
-            if (audioClick.current) {
-                audioClick.current.play()
-            }
         }
     }
 
@@ -207,9 +180,6 @@ export default function Sudoku() {
         setTemporizador(0)
         setEnEjecucion(true)
         setProgreso(0)
-        if (audioClick.current) {
-            audioClick.current.play()
-        }
     }
 
     const manejarGuardar = () => {
@@ -218,9 +188,6 @@ export default function Sudoku() {
             title: "Juego guardado",
             description: "Tu progreso ha sido guardado correctamente.",
         })
-        if (audioClick.current) {
-            audioClick.current.play()
-        }
     }
 
     const manejarCargar = () => {
@@ -236,18 +203,12 @@ export default function Sudoku() {
                 title: "Juego cargado",
                 description: "Tu juego guardado ha sido cargado correctamente.",
             })
-            if (audioClick.current) {
-                audioClick.current.play()
-            }
         } else {
             toast({
                 title: "Error",
                 description: "No se encontró ningún juego guardado.",
                 variant: "destructive",
             })
-            if (audioError.current) {
-                audioError.current.play()
-            }
         }
     }
 
@@ -356,7 +317,7 @@ export default function Sudoku() {
                             >
                                 {num}
                             </Button>
-                        ))}
+                        ))}s
                     </div>
 
                     <div className="flex justify-between">
