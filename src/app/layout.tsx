@@ -1,18 +1,6 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import "./globals.css";
 import ToastComponent from '../components/ToastComponent'; // Ajusta la ruta según la estructura de tu proyecto
-
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
 
 export const metadata: Metadata = {
   title: "Sudoku Maritza",
@@ -28,24 +16,29 @@ type Toast = {
   duration?: number;
 };
 
-export default function RootLayout({
-  children,
-  state, // Añade state como una prop
-}: Readonly<{
+// Define las props del componente Layout
+interface LayoutProps {
   children: React.ReactNode;
-  state: { toasts: Array<Toast> }; // Utiliza el tipo Toast en la definición de state
-}>) {
-  return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-        {/* Asegúrate de que state y state.toasts están definidos antes de usarlos */}
-        {state?.toasts?.map(toast => (
-          <ToastComponent key={toast.id} title={toast.title || "Título predeterminado"} {...toast} />
-        ))}
-      </body>
-    </html>
-  );
+  state: {
+    toasts: Toast[];
+  };
 }
+
+// Componente Layout con tipado correcto
+const Layout: React.FC<LayoutProps> = ({ children, state }) => {
+  return (
+    <div style={{ fontFamily: "var(--font-geist-sans)" }}>
+      {children}
+      {state.toasts.map(({ id, title, message, duration }) => (
+        <ToastComponent 
+          key={id} 
+          title={title || "Título predeterminado"} // Proporciona un título predeterminado si title es undefined
+          message={message || "Mensaje predeterminado"} // Proporciona un mensaje predeterminado si message es undefined
+          duration={duration || 5000} // Proporciona una duración predeterminada si duration es undefined
+        />
+      ))}
+    </div>
+  );
+};
+
+export default Layout;
