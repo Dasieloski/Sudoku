@@ -1,3 +1,4 @@
+import React from 'react'; // Asegúrate de importar React
 import type { Metadata } from "next";
 import "./globals.css";
 import ToastComponent from '../components/ToastComponent'; // Ajusta la ruta según la estructura de tu proyecto
@@ -41,4 +42,4 @@ const Layout: React.FC<LayoutProps> = ({ children, state }) => {
   );
 };
 
-export default Layout;
+export default Layout; // Asegúrate de que la exportación por defecto esté correctamente definida
