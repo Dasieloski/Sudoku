@@ -8,7 +8,7 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
+const TOAST_LIMIT = 5; // Aumenta el límite de toasts visibles al mismo tiempo
 const TOAST_REMOVE_DELAY = 1000000
 
 type ToasterToast = ToastProps & {
@@ -77,11 +77,15 @@ const addToRemoveQueue = (toastId: string) => {
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
+      // Asegúrate de que los nuevos toasts se añaden sin exceder el límite
+      const newToasts = [action.toast, ...state.toasts];
+      if (newToasts.length > TOAST_LIMIT) {
+        newToasts.length = TOAST_LIMIT; // Limita el array de toasts al máximo permitido
+      }
       return {
         ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
-      }
-
+        toasts: newToasts,
+      };
     case "UPDATE_TOAST":
       return {
         ...state,

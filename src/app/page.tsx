@@ -1,11 +1,10 @@
-'use client'
+"use client"
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Slider } from "@/components/ui/slider"
 import { Progress } from "@/components/ui/progress"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -36,7 +35,6 @@ export default function Sudoku() {
     const [modoOscuro, setModoOscuro] = useState(false)
     const [mostrandoPista, setMostrandoPista] = useState(false)
     const [progreso, setProgreso] = useState(0)
-    const [volumenSonido, setVolumenSonido] = useState(50)
     const tableroRef = useRef<HTMLDivElement>(null)
     const { toast } = useToast()
 
@@ -87,26 +85,76 @@ export default function Sudoku() {
 
     const generarSudoku = useCallback(() => {
         const nuevoTablero: TableroSudoku = Array(9).fill(null).map(() => Array(9).fill(null))
-        const numParaLlenar = NIVELES_DIFICULTAD[dificultad].celdas
 
-        for (let i = 0; i < numParaLlenar; i++) {
-            let fila, columna, num
-            do {
-                fila = Math.floor(Math.random() * 9)
-                columna = Math.floor(Math.random() * 9)
-                num = Math.floor(Math.random() * 9) + 1
-            } while (nuevoTablero[fila][columna] !== null || !esMovimientoValido(nuevoTablero, fila, columna, num))
-            nuevoTablero[fila][columna] = num
+        // Función para verificar si el número puede ser colocado en la celda
+        const esPosible = (tablero: TableroSudoku, fila: number, columna: number, num: number) => {
+            for (let i = 0; i < 9; i++) {
+                if (tablero[fila][i] === num || tablero[i][columna] === num) {
+                    return false;
+                }
+            }
+            const filaInicio = Math.floor(fila / 3) * 3;
+            const columnaInicio = Math.floor(columna / 3) * 3;
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if (tablero[filaInicio + i][columnaInicio + j] === num) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        };
+
+        // Función recursiva para llenar el tablero
+        const llenarTablero = (tablero: TableroSudoku, posicion: number) => {
+            if (posicion === 81) {
+                return true; // Tablero completado
+            }
+            const fila = Math.floor(posicion / 9);
+            const columna = posicion % 9;
+
+            if (tablero[fila][columna] !== null) {
+                return llenarTablero(tablero, posicion + 1);
+            }
+
+            const numeros = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
+            for (const num of numeros) {
+                if (esPosible(tablero, fila, columna, num)) {
+                    tablero[fila][columna] = num;
+                    if (llenarTablero(tablero, posicion + 1)) {
+                        return true;
+                    }
+                    tablero[fila][columna] = null;
+                }
+            }
+            return false;
+        };
+
+        if (!llenarTablero(nuevoTablero, 0)) {
+            console.error("No se pudo generar un tablero válido");
+            return;
         }
 
-        setTablero(nuevoTablero)
-        setTableroInicial(JSON.parse(JSON.stringify(nuevoTablero)))
-        setHistorial([nuevoTablero])
-        setErrores(new Set())
-        setTemporizador(0)
-        setEnEjecucion(true)
-        setProgreso(0)
-    }, [dificultad])
+        // Eliminar números aleatoriamente para crear el puzzle
+        const numParaLlenar = NIVELES_DIFICULTAD[dificultad].celdas;
+        let celdasLlenas = 81;
+        while (celdasLlenas > numParaLlenar) {
+            const fila = Math.floor(Math.random() * 9);
+            const columna = Math.floor(Math.random() * 9);
+            if (nuevoTablero[fila][columna] !== null) {
+                nuevoTablero[fila][columna] = null;
+                celdasLlenas--;
+            }
+        }
+
+        setTablero(nuevoTablero);
+        setTableroInicial(JSON.parse(JSON.stringify(nuevoTablero)));
+        setHistorial([nuevoTablero]);
+        setErrores(new Set());
+        setTemporizador(0);
+        setEnEjecucion(true);
+        setProgreso(0);
+    }, [dificultad]);
 
     useEffect(() => {
         generarSudoku()
@@ -147,11 +195,12 @@ export default function Sudoku() {
             nuevosErrores.delete(`${fila},${columna}`)
         }
 
-        setTablero(nuevoTablero)
-        setHistorial([...historial, nuevoTablero])
-        setErrores(nuevosErrores)
+        // Debugging
+        console.log("Errores actuales:", nuevosErrores.size)
+        console.log("Tablero completo:", esTableroCompleto(nuevoTablero))
 
         if (esTableroCompleto(nuevoTablero) && nuevosErrores.size === 0) {
+            console.log("Celebración activada")
             setEnEjecucion(false)
             confetti()
             toast({
@@ -159,6 +208,10 @@ export default function Sudoku() {
                 description: "Has completado el Sudoku correctamente.",
             })
         }
+
+        setTablero(nuevoTablero)
+        setHistorial([...historial, nuevoTablero])
+        setErrores(nuevosErrores)
     }
 
     const esTableroCompleto = (tablero: TableroSudoku): boolean => {
@@ -317,7 +370,7 @@ export default function Sudoku() {
                             >
                                 {num}
                             </Button>
-                        ))}s
+                        ))}
                     </div>
 
                     <div className="flex justify-between">
@@ -404,20 +457,6 @@ export default function Sudoku() {
                     >
                         <HelpCircle className="mr-2 h-4 w-4" /> Mostrar Pista
                     </Button>
-
-                    <div className="space-y-2">
-                        <label htmlFor="volumen" className="text-sm font-medium">
-                            Volumen de sonido: {volumenSonido}%
-                        </label>
-                        <Slider
-                            id="volumen"
-                            min={0}
-                            max={100}
-                            step={1}
-                            value={[volumenSonido]}
-                            onValueChange={(value) => setVolumenSonido(value[0])}
-                        />
-                    </div>
                 </CardContent>
             </Card>
         </div>
