@@ -25,8 +25,8 @@ interface LayoutProps {
   };
 }
 
-// Componente Layout con tipado correcto
-const Layout: React.FC<LayoutProps> = ({ children, state }) => {
+// Definición del componente sin usar React.FC
+const Layout = ({ children, state }: LayoutProps) => {
   return (
     <div style={{ fontFamily: "var(--font-geist-sans)" }}>
       {children}
